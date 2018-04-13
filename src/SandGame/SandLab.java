@@ -5,8 +5,6 @@ import java.util.*;
 
 public class SandLab
 {
-	// Step 4,6
-	// add constants for particle types here
 	public static final int EMPTY = 0;
 	public static final int METAL = 1;
 	public static final int SAND = 2;
@@ -16,9 +14,9 @@ public class SandLab
 	public static final int GLASS = 6;
 	public static final int MAGMA = 7;
 
-	// do not add any more fields below
 	private int[][] grid;
 	private SandDisplay display;
+	private boolean noBounds;
 
 	/**
 	 * Constructor for SandLab
@@ -28,7 +26,7 @@ public class SandLab
 	 * @param numCols
 	 *            The number of columns to start with;
 	 */
-	public SandLab(int numRows, int numCols)
+	public SandLab(int numRows, int numCols, boolean noBounds)
 	{
 		String[] names;
 		names = new String[8];
@@ -42,6 +40,7 @@ public class SandLab
 		names[MAGMA] = "Magma";
 		grid = new int[numRows][numCols];
 		display = new SandDisplay("Falling Sand", numRows, numCols, names);
+		this.noBounds = noBounds;
 	}
 
 	// called when the user clicks on a location using the given tool
@@ -88,13 +87,16 @@ public class SandLab
 		int col = (int) (Math.random() * grid[0].length);
 		if (grid[row][col] == SAND)
 		{
-			if (row < grid.length - 1 && grid[row + 1][col] != METAL)
+			if (row < grid.length - 1)
 			{
-				int temp = grid[row][col];
-				grid[row][col] = grid[row + 1][col];
-				grid[row + 1][col] = temp;
+				if (grid[row + 1][col] != METAL && grid[row + 1][col] != GLASS)
+				{
+					int temp = grid[row][col];
+					grid[row][col] = grid[row + 1][col];
+					grid[row + 1][col] = temp;
+				}
 			}
-			else if (row == grid.length - 1)
+			else if (noBounds && row == grid.length - 1)
 				grid[row][col] = EMPTY;
 		}
 		else if (grid[row][col] == WATER)
@@ -112,7 +114,9 @@ public class SandLab
 					grid[row][col] = GAS;
 					grid[row][col - 1] = WATER;
 				}
-				else if (col == 0)
+				else if (col > 0 && grid[row][col - 1] == MAGMA)
+					grid[row][col] = GAS;
+				else if (noBounds && col == 0)
 					grid[row][col] = EMPTY;
 			}
 			else if (direction == 1)
@@ -127,7 +131,9 @@ public class SandLab
 					grid[row][col] = GAS;
 					grid[row][col + 1] = WATER;
 				}
-				else if (col == grid[0].length - 1)
+				else if (col < grid[0].length - 1 && grid[row][col + 1] == MAGMA)
+					grid[row][col] = GAS;
+				else if (noBounds && col == grid[0].length - 1)
 					grid[row][col] = EMPTY;
 			}
 			else
@@ -142,7 +148,9 @@ public class SandLab
 					grid[row][col] = GAS;
 					grid[row + 1][col] = WATER;
 				}
-				else if (row == grid.length - 1)
+				else if (row < grid.length - 1 && grid[row + 1][col] == MAGMA)
+					grid[row][col] = GAS;
+				else if (noBounds && row == grid.length - 1)
 					grid[row][col] = EMPTY;
 			}
 		}
@@ -156,7 +164,7 @@ public class SandLab
 					grid[row][col] = EMPTY;
 					grid[row][col - 1] = GAS;
 				}
-				else if (col == 0)
+				else if (noBounds && col == 0)
 					grid[row][col] = EMPTY;
 			}
 			else if (direction == 1)
@@ -166,7 +174,7 @@ public class SandLab
 					grid[row][col] = EMPTY;
 					grid[row][col + 1] = GAS;
 				}
-				else if (row == grid[0].length - 1)
+				else if (noBounds && row == grid[0].length - 1)
 					grid[row][col] = EMPTY;
 			}
 			else
@@ -176,7 +184,7 @@ public class SandLab
 					grid[row][col] = EMPTY;
 					grid[row - 1][col] = GAS;
 				}
-				else if (row == 0)
+				else if (noBounds && row == 0)
 					grid[row][col] = EMPTY;
 			}
 		}
@@ -190,7 +198,7 @@ public class SandLab
 					grid[row][col] = EMPTY;
 					grid[row][col - 1] = ACID;
 				}
-				else if (col == 0)
+				else if (noBounds && col == 0)
 					grid[row][col] = EMPTY;
 			}
 			else if (direction == 1)
@@ -200,7 +208,7 @@ public class SandLab
 					grid[row][col] = EMPTY;
 					grid[row][col + 1] = ACID;
 				}
-				else if (col == grid[0].length - 1)
+				else if (noBounds && col == grid[0].length - 1)
 					grid[row][col] = EMPTY;
 			}
 			else
@@ -210,7 +218,7 @@ public class SandLab
 					grid[row][col] = EMPTY;
 					grid[row + 1][col] = ACID;
 				}
-				else if (row == grid.length - 1)
+				else if (noBounds && row == grid.length - 1)
 					grid[row][col] = EMPTY;
 			}
 		}
@@ -227,7 +235,7 @@ public class SandLab
 						grid[row][col - 1] = MAGMA;
 					}
 				}
-				else if (col > 0)
+				if (col > 0)
 				{
 					if (grid[row][col - 1] == GAS || grid[row][col - 1] == WATER)
 					{
@@ -235,37 +243,49 @@ public class SandLab
 						grid[row][col - 1] = MAGMA;
 					}
 				}
-				else if (col == 0)
+				else if (noBounds && col == 0)
 					grid[row][col] = EMPTY;
 			}
 			else if (direction == 1)
 			{
-				if (col < grid[0].length - 1 && (grid[row][col + 1] == EMPTY || grid[row][col + 1] == SAND || grid[row][col + 1] == ACID || grid[row][col + 1] == GLASS))
+				if (col < grid[0].length - 1)
 				{
-					grid[row][col] = EMPTY;
-					grid[row][col + 1] = MAGMA;
+					if (grid[row][col + 1] == EMPTY || grid[row][col + 1] == SAND || grid[row][col + 1] == ACID || grid[row][col + 1] == GLASS)
+					{
+						grid[row][col] = EMPTY;
+						grid[row][col + 1] = MAGMA;
+					}
 				}
-				else if (col < grid[0].length - 1 && (grid[row][col + 1] == GAS) || grid[row][col + 1] == WATER)
+				if (col < grid[0].length - 1)
 				{
-					grid[row][col] = GAS;
-					grid[row][col + 1] = MAGMA;
+					if (grid[row][col + 1] == GAS || grid[row][col + 1] == WATER)
+					{
+						grid[row][col] = GAS;
+						grid[row][col + 1] = MAGMA;
+					}
 				}
-				else if (col == grid[0].length - 1)
+				else if (noBounds && col == grid[0].length - 1)
 					grid[row][col] = EMPTY;
 			}
 			else
 			{
-				if (row < grid.length - 1 && (grid[row + 1][col] == EMPTY || grid[row + 1][col] == SAND || grid[row + 1][col] == ACID || grid[row + 1][col] == GLASS))
+				if (row < grid.length - 1)
 				{
-					grid[row][col] = EMPTY;
-					grid[row + 1][col] = MAGMA;
+					if (grid[row + 1][col] == EMPTY || grid[row + 1][col] == SAND || grid[row + 1][col] == ACID || grid[row + 1][col] == GLASS)
+					{
+						grid[row][col] = EMPTY;
+						grid[row + 1][col] = MAGMA;
+					}
 				}
-				else if (row < grid.length - 1 && (grid[row + 1][col] == GAS || grid[row + 1][col] == WATER))
+				if (row < grid.length - 1)
 				{
-					grid[row][col] = GAS;
-					grid[row + 1][col] = MAGMA;
+					if (grid[row + 1][col] == GAS || grid[row + 1][col] == WATER)
+					{
+						grid[row][col] = GAS;
+						grid[row + 1][col] = MAGMA;
+					}
 				}
-				else if (row == grid.length - 1)
+				else if (noBounds && row == grid.length - 1)
 					grid[row][col] = EMPTY;
 			}
 		}
